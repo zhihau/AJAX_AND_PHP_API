@@ -33,7 +33,7 @@ xhr.onload=function(){
 }
 
 //執行請求及傳送內容
-xhr.send(context);
+xhr.send(context);//context用post才需要
 
 ```
 ---
