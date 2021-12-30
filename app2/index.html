@@ -1,50 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>學生資料管理系統</title>
-    <link rel="shortcut icon" href="#" type="image/x-icon">
-    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="#" type="image/x-icon" />
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+      integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+      crossorigin="anonymous"
+    />
     <!---匯入要使用的函式庫--->
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+    <!-- 函式庫寫得好可以放前面 -->
+    <!-- 自己寫的放在後面比較好 -->
+  </head>
+  <body>
+    <h1 class="header"><a href="#" onclick="home()">學生資料管理系統</a></h1>
+    <div class="container">
+      <div id="classlist" class="card-columns"></div>
+      <div id="nav" class="d-flex justify-content-between"></div>
+      <table id="students" class="table"></table>
+    </div>
 
-
-</head>
-<body>
-  <h1 class="header">學生資料管理系統</h1>
-
-  
-</body>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+      integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+      integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+      crossorigin="anonymous"
+    ></script>
+  </body>
 </html>
 <script>
-/************************************
-* 1.考慮觸發行為的事件
-* 2.建立監聽行為
-* 3.考慮是否需要代入參數
-* 4.是否會有回傳值？回傳值的功用及處理？
-* 5.是否需要更新畫面內容？更新畫面的方法？
-************************************/
+  /************************************
+   * 1.考慮觸發行為的事件
+   * 2.建立監聽行為
+   * 3.考慮是否需要代入參數
+   * 4.是否會有回傳值？回傳值的功用及處理？
+   * 5.是否需要更新畫面內容？更新畫面的方法？
+   ************************************/
 
+  function home() {
+    $("#classlist").show();
+    $("#nav").removeClass("d-flex");
+    $("#nav").hide();
+    $("#students").html("");
+  }
+  list();
+  function list() {
+    $.get("api/list.php", (list) => {
+      // $("#classlist").html(list);
+      let classlist = JSON.parse(list);
+      let card;
+      classlist.forEach((c, i) => {
+        card = `<a href="#" onclick="loadStudents('${c.班級}')">
+          <div class="card">
+          <div class="card-body">
+          <h5 class="card-title">${c.班級}</h5>
+<p class="card-text">${c.人數}</p>
+</div>
+</div>
+</a>`;
+        $("#classlist").append(card);
+      });
 
-//新增資料的函式
-function create(){
+      console.log(list);
+    });
+  }
+  function showNav() {
+    $("#nav").html("");
+    $("#nav").addClass("d-flex");
+    $.get("api/list.php", (list) => {
+      // $("#classlist").html(list);
+      let classlist = JSON.parse(list);
+      let card;
+      classlist.forEach((c, i) => {
+        card = `<a href="#" class="mx-2 bordered rounded" onclick=""><h5>${c.班級}</h5>
+<h5>${c.人數}</h5></a>`;
+        $("#nav").append(card);
+      });
+      $("#nav").prepend(
+        `<input type='text' name='query' id='query' placeholder='輸入學生姓名'><button onclick='query()'>查詢</button>`
+      );
+      console.log(list);
+    });
+  }
+  // 載入班級學員列表
+  function loadStudents(classnum) {
+    $("#students").html("");
 
-}
+    $.getJSON("api/load_student.php", { classroom: classnum }, (stulist) => {
+      //回乎韓式
+      showData(stulist);
+      $("#classlist").hide();
+      showNav();
+    });
+  }
+  // table 顯示學生專用韓式
+  function showData(array) {
+    let data;
+    if (typeof array == "object") {
+      data = array;
+    } else {
+      data = JSON.parse(array);
+    }
+    let tr = "";
+    data.forEach((stu, idx) => {
+      tr = `
+      <tr>
+        <td>${stu.uni_id}</td>
+        <td>${stu.seat_num}</td>
+        <td>${stu.name}</td>
+        <td>${stu.birthday}</td>
+        <td>${stu.national_id}</td>
+        <td>
+          <button class='btn btn-primary' onclick='update(${stu.id})'>編輯</button>
+          <button class='btn btn-danger' onclick='del(${stu.id})'>刪除</button>
+        </td>
 
-//查詢資料的函式
-function query(){
+      </tr>
+      `;
+      $("#students").append(tr);
+    });
+  }
+  //新增資料的函式
+  function create() {}
 
-}
+  //查詢資料的函式
+  function query() {
+    console.log("aaa");
+    $("#students").html("");
+    console.log($("#query").val());
+    $.get("api/query.php", { q: $("#query").val() }, (items) => {
+      console.log(items);
+      showData(items);
+    });
+  }
 
-//編輯資料的函式
-function update(){
+  //編輯資料的函式
+  function update() {}
 
-}
-
-//刪除資料的函式
-function del(){
-
-}
-
+  //刪除資料的函式
+  function del(id) {
+    // 動作會更新到資料表的內容 原則上用post`,要查詢到資料用get
+    $.post("api/delete.php",{id},(classnum)=>{
+      loadStudents(classnum);
+    });
+  }
 </script>
